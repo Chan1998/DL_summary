@@ -82,7 +82,7 @@ class Actor(object):
 
             # l2 = tf.layers.dense(
             #     inputs=l1,
-            #     units=200,  # number of hidden units
+            #     units=64,  # number of hidden units
             #     activation=tf.nn.relu,
             #     kernel_initializer=tf.random_normal_initializer(0., .1),  # weights
             #     bias_initializer=tf.constant_initializer(0.1),  # biases
@@ -166,7 +166,7 @@ class Critic(object):
 
             # l2 = tf.layers.dense(
             #     inputs=l1,
-            #     units=200,  # number of hidden units
+            #     units=64,  # number of hidden units
             #     activation=tf.nn.relu,  # None
             #     # have to be linear to make sure the convergence of actor.
             #     # But linear approximator seems hardly learns the correct Q.

@@ -8,7 +8,7 @@ import random
 
 import tensorflow.contrib.layers as layers
 
-layers_list = [200]
+layers_list = [64]
 
 MEMORY_SIZE = 200
 BATCH_SIZE = 32
