@@ -39,3 +39,18 @@ def state_generate(channel_num, time_slots, channel_period):
 #
 # state_data.to_csv("./period_state71113.csv", index=False)
 
+#第三种情况：周期【7，11，13】
+
+state_data = state_generate(8,10000,[8,9,10,11,12,13,14,15])
+print(np.shape(state_data))
+
+
+state_data = pd.DataFrame(state_data, columns=['channel_1', 'channel_2', 'channel_3', 'channel_4',
+                                               'channel_5', 'channel_6', 'channel_7', 'channel_8'])
+
+# print(state_data)
+
+state_data.to_csv("./period_state8.csv", index=False)
+
+
+

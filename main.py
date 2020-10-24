@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import random
 import seaborn as sns
+from tqdm import tqdm
 # import gym
 import matplotlib.pyplot as plt
 import DQN_agent as DQN
@@ -24,8 +25,8 @@ import DSA_env as ENV
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
 MEMORY_SIZE = 500
-EPISODES = 10
-MAX_STEP = 5000 # 注意小于state总时隙数
+EPISODES = 5
+MAX_STEP = 3000 # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
 SHOW_PERIOD = 400
@@ -38,7 +39,7 @@ def random_chose(env):
 
 
     # 开始训练
-    for episode in range(EPISODES):
+    for episode in tqdm(range(EPISODES)):
         state = env.reset()
         reward_all = 0
         reward_list = []
@@ -47,7 +48,7 @@ def random_chose(env):
         for step in range(MAX_STEP):
             # if episode % 5 == 1:
             #     env.render()
-            action = random.randint(0, 3)
+            action = random.randint(0, env.action_space)
             action_list.append(action)
             _, reward,  _  = env.step(action, step)
             reward_all += reward
@@ -70,14 +71,14 @@ def Train_DQN(env, agent):
 
     loss_list = []
     # 开始训练
-    for episode in range(EPISODES):
+    for episode in tqdm(range(EPISODES)):
         state = env.reset()
         state = state.reshape(env.channel_num * env.time_step)
         reward_all = 0
         reward_list = []
         action_list = []
         # training
-        for step in range(MAX_STEP):
+        for step in tqdm(range(MAX_STEP)):
             # if episode % 5 == 1:
             #     env.render()
             action = agent.chose_action(state)
@@ -119,11 +120,13 @@ def Train_DQN(env, agent):
             #     reward_list.append(step)
             #     break
 
-            if update_iter % SHOW_PERIOD == 1:  # 更新target网络
-                print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
+            # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
+            #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
 
             state = next_state
         reward_list_epsiod.append(reward_all)
+        print("epsiods = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+            episode, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
     return action_list, reward_list, loss_list, reward_list_epsiod
 
 def Train_DRQN(env, agent):
@@ -135,14 +138,14 @@ def Train_DRQN(env, agent):
 
     loss_list = []
     # 开始训练
-    for episode in range(EPISODES):
+    for episode in tqdm(range(EPISODES)):
         state = env.reset()
         state = state.reshape(env.channel_num * env.time_step)
         reward_all = 0
         reward_list = []
         action_list = []
         # training
-        for step in range(MAX_STEP):
+        for step in tqdm(range(MAX_STEP)):
             # if episode % 5 == 1:
             #     env.render()
             action = agent.chose_action(state)
@@ -184,13 +187,16 @@ def Train_DRQN(env, agent):
             #     reward_list.append(step)
             #     break
 
-            if update_iter % SHOW_PERIOD == 1:  # 更新target网络
-                print(
-                    "epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
-                        episode, step, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
+            # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
+            #     print(
+            #         "epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+            #             episode, step, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
             state = next_state
         reward_list_epsiod.append(reward_all)
+        print(
+                "epsiods = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+                    episode, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
     return action_list, reward_list, loss_list, reward_list_epsiod
 
 def Train_DCQN(env, agent):
@@ -203,13 +209,13 @@ def Train_DCQN(env, agent):
 
     loss_list = []
     # 开始训练
-    for episode in range(EPISODES):
+    for episode in tqdm(range(EPISODES)):
         state = env.reset()
         reward_all = 0
         reward_list = []
         action_list = []
         # training
-        for step in range(MAX_STEP):
+        for step in tqdm(range(MAX_STEP)):
             # if episode % 5 == 1:
             #     env.render()
             action = agent.chose_action(state)
@@ -249,12 +255,16 @@ def Train_DCQN(env, agent):
             #     reward_list.append(step)
             #     break
 
-            if update_iter % SHOW_PERIOD == 1:  # 更新target网络
-                print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
+            # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
+            #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
 
             state = next_state
 
         reward_list_epsiod.append(reward_all)
+
+        print(
+            "epsiods = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+                episode, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
     return action_list, reward_list, loss_list, reward_list_epsiod
 
@@ -352,14 +362,14 @@ def Train_AC(env, actor, critic):
 
     loss_list = []
     # 开始训练
-    for episode in range(EPISODES):
+    for episode in tqdm(range(EPISODES)):
         state = env.reset()
         state = state.reshape(env.channel_num * env.time_step)
         reward_all = 0
         reward_list = []
         action_list = []
         # training
-        for step in range(MAX_STEP):
+        for step in tqdm(range(MAX_STEP)):
             # if episode % 5 == 1:
             #     env.render()
             action = actor.chose_action(state)
@@ -378,10 +388,10 @@ def Train_AC(env, actor, critic):
             # _, summery = actor.learn(state, action, td_error)  # Actor 学习
             # write.add_summary(summery, update_iter)
             actor.learn(state, action, td_error)  # Actor 学习
-            if update_iter % SHOW_PERIOD == 1:  # 更新target网络
-                print(
-                    "epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
-                        episode, step, abs(td_error[0][0]), action, reward, reward_all, float(reward_all) / float(step + 1)))
+            # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
+            #     print(
+            #         "epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+            #             episode, step, abs(td_error[0][0]), action, reward, reward_all, float(reward_all) / float(step + 1)))
 
             update_iter += 1
 
@@ -398,6 +408,10 @@ def Train_AC(env, actor, critic):
             state = next_state
 
         reward_list_epsiod.append(reward_all)
+
+        print(
+            "epsiods = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+                episode, td_error[0][0], action, reward, reward_all, float(reward_all) / float(step + 1)))
 
     return action_list, reward_list, loss_list, reward_list_epsiod
 
