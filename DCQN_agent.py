@@ -8,7 +8,7 @@ import random
 
 import tensorflow.contrib.layers as layers
 
-layers_list = [200]
+# layers_list = [200]
 
 MEMORY_SIZE = 200
 BATCH_SIZE = 32
@@ -67,7 +67,8 @@ class DeepQNetwork():
                                                                                                     #[1,strids,strids,1]
 
             l_out = tf.reshape(conv1, [-1, self.height * self.width * self.out_channel], name='3_1D')
-            out = layers.fully_connected(l_out, num_outputs=num_actions, activation_fn=None)
+            l1 = layers.fully_connected(l_out, num_outputs=64, activation_fn=tf.nn.relu)
+            out = layers.fully_connected(l1, num_outputs=num_actions, activation_fn=None)
             return out
 
 

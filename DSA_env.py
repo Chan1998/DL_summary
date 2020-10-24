@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 # 只有一个信道，间歇占用[001001001001]
 
 # 读取.文件
-data_in = pd.read_csv("./channel_data/period_state235.csv")
+data_in = pd.read_csv("./channel_data/period_state71113.csv")
 
 class DSA():
     def __init__(self):
@@ -47,12 +47,12 @@ class DSA():
             self.state[i].append(data_in["channel_"+str(i+1)][steps + self.time_step])
 
         if action == 0:  # 次级用户不进行信息传输
-            reward = 0
+            reward = -0.1
             return np.array(self.state), reward, 0
 
         if data_in["channel_"+str(action)][steps + self.time_step]:
-            reward = 1
-        else: reward = -5
+            reward = 2
+        else: reward = -1
         return np.array(self.state), reward, 0
 
 

@@ -24,8 +24,8 @@ import DSA_env as ENV
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
 MEMORY_SIZE = 500
-EPISODES = 1
-MAX_STEP = 8000 # 注意小于state总时隙数
+EPISODES = 10
+MAX_STEP = 5000 # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
 SHOW_PERIOD = 400
@@ -509,6 +509,9 @@ if __name__ == "__main__":
         # P_G = PG.PolicyGradient(env, sess)
         # reward_list_PG, loss_list_PG = Train_PG(env, P_G)
 
+        DCQN = dcqn.DeepQNetwork(env, sess)
+        action_list_DCQN, reward_list_DCQN, loss_list_DCQN, epsiod_reward_list_DCQN = Train_DCQN(env, DCQN)
+
         actor = AC.Actor(env, sess)  # 初始化Actor
         critic = AC.Critic(env, sess)  # 初始化Critic
         action_list_AC, reward_list_AC, loss_list_AC, epsiod_reward_list_AC = Train_AC(env, actor, critic)
@@ -517,9 +520,6 @@ if __name__ == "__main__":
         action_list_DRQN, reward_list_DRQN, loss_list_DRQN, epsiod_reward_list_DRQN = Train_DRQN(env, DRQN)
 
         # action_list_random, reward_list_random, epsiod_reward_list_random = random_chose(env)
-
-        DCQN = dcqn.DeepQNetwork(env, sess)
-        action_list_DCQN, reward_list_DCQN, loss_list_DCQN, epsiod_reward_list_DCQN = Train_DCQN(env, DCQN)
 
         # # Test_AC(env, actor)
 
