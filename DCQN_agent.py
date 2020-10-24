@@ -10,7 +10,7 @@ import tensorflow.contrib.layers as layers
 
 # layers_list = [200]
 
-MEMORY_SIZE = 200
+MEMORY_SIZE = 50000
 BATCH_SIZE = 32
 
 
@@ -29,7 +29,7 @@ class DeepQNetwork():
         self.height = env.time_step
         self.width = env.channel_num
         self.in_channel = 1
-        self.out_channel = 64
+        self.out_channel = 200
 
 
         # for gym:
@@ -67,7 +67,7 @@ class DeepQNetwork():
                                                                                                     #[1,strids,strids,1]
 
             l_out = tf.reshape(conv1, [-1, self.height * self.width * self.out_channel], name='3_1D')
-            l1 = layers.fully_connected(l_out, num_outputs=64, activation_fn=tf.nn.relu)
+            l1 = layers.fully_connected(l_out, num_outputs=200, activation_fn=tf.nn.relu)
             out = layers.fully_connected(l1, num_outputs=num_actions, activation_fn=None)
             return out
 
@@ -102,7 +102,7 @@ class DeepQNetwork():
 
 
         with tf.variable_scope("train"):
-            optimizer = tf.train.RMSPropOptimizer(0.001)
+            optimizer = tf.train.AdamOptimizer(0.0001)
             self.train_op = optimizer.minimize(self.loss)
 
             # training

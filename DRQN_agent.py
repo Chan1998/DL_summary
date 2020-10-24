@@ -8,9 +8,9 @@ import random
 
 import tensorflow.contrib.layers as layers
 
-layers_list = [64]
+layers_list = [200]
 
-MEMORY_SIZE = 200
+MEMORY_SIZE = 50000
 BATCH_SIZE = 32
 
 
@@ -92,7 +92,7 @@ class DeepQNetwork():
 
 
         with tf.variable_scope("train"):
-            optimizer = tf.train.RMSPropOptimizer(0.001)
+            optimizer = tf.train.AdamOptimizer(0.0001)
             self.train_op = optimizer.minimize(self.loss)
 
             # training
