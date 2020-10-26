@@ -25,7 +25,7 @@ import DSA_env as ENV
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
 MEMORY_SIZE = 50000
-EPISODES = 1
+EPISODES = 300
 MAX_STEP = 3000 # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
@@ -128,9 +128,9 @@ def Train_DQN(env, agent):
             state = next_state
         reward_list_epsiod.append(reward_all)
 
-        print(
-            "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
-                episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
+        # print(
+        #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+        #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
     return action_list, reward_list, loss_list, reward_list_epsiod
 
@@ -200,9 +200,9 @@ def Train_DRQN(env, agent):
             state = next_state
         reward_list_epsiod.append(reward_all)
 
-        print(
-            "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
-                episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
+        # print(
+        #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+        #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
     return action_list, reward_list, loss_list, reward_list_epsiod
 
@@ -269,9 +269,9 @@ def Train_DCQN(env, agent):
 
         reward_list_epsiod.append(reward_all)
 
-        print(
-            "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
-                episode, agent.epsilon ,loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
+        # print(
+        #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+        #         episode, agent.epsilon ,loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
     return action_list, reward_list, loss_list, reward_list_epsiod
 
