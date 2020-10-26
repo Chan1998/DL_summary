@@ -10,7 +10,7 @@ import tensorflow.contrib.layers as layers
 
 # layers_list = [200]
 
-MEMORY_SIZE = 50000
+MEMORY_SIZE = 5000
 BATCH_SIZE = 32
 
 

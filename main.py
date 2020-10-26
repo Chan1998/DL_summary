@@ -24,13 +24,13 @@ import DSA_env as ENV
 # ENV = "Pendulum-v0" #连续动作比较复杂，DQN不行
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
-MEMORY_SIZE = 50000
-EPISODES = 300
+MEMORY_SIZE = 5000
+EPISODES = 2
 MAX_STEP = 3000 # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
 EXPLOR_PERIOD = ((EPISODES * MAX_STEP) // 40)
-print(EXPLOR_PERIOD)
+# print(EXPLOR_PERIOD)
 SHOW_PERIOD = 400
 layers_list = [200,200]
 
@@ -80,7 +80,7 @@ def Train_DQN(env, agent):
         reward_list = []
         action_list = []
         # training
-        for step in range(MAX_STEP):
+        for step in tqdm(range(MAX_STEP)):
             # if episode % 5 == 1:
             #     env.render()
             action = agent.chose_action(state)
@@ -150,7 +150,7 @@ def Train_DRQN(env, agent):
         reward_list = []
         action_list = []
         # training
-        for step in range(MAX_STEP):
+        for step in tqdm(range(MAX_STEP)):
             # if episode % 5 == 1:
             #     env.render()
             action = agent.chose_action(state)
@@ -222,7 +222,7 @@ def Train_DCQN(env, agent):
         reward_list = []
         action_list = []
         # training
-        for step in range(MAX_STEP):
+        for step in tqdm(range(MAX_STEP)):
             # if episode % 5 == 1:
             #     env.render()
             action = agent.chose_action(state)
@@ -376,7 +376,7 @@ def Train_AC(env, actor, critic):
         reward_list = []
         action_list = []
         # training
-        for step in range(MAX_STEP):
+        for step in tqdm(range(MAX_STEP)):
             # if episode % 5 == 1:
             #     env.render()
             action = actor.chose_action(state)
