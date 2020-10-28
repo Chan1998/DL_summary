@@ -8,7 +8,7 @@ import random
 
 import tensorflow.contrib.layers as layers
 
-layers_list = [200,200]
+layers_list = [200,64,32,200]
 
 MEMORY_SIZE = 5000
 

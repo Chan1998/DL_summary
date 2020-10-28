@@ -27,14 +27,14 @@ import DSA_env as ENV
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
 MEMORY_SIZE = 5000
-EPISODES = 1
-MAX_STEP = 4000 # 注意小于state总时隙数
+EPISODES = 10
+MAX_STEP = 2000  # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
 EXPLOR_PERIOD = ((EPISODES * MAX_STEP) // 40)
 # print(EXPLOR_PERIOD)
 SHOW_PERIOD = 400
-layers_list = [200,200]
+# layers_list = [200,64]
 
 
 def random_chose(env):
@@ -86,26 +86,26 @@ def Train_DQN(env, agent):
             reward_list = []
             action_list = []
             # training
-            for step in tqdm(range(MAX_STEP)):
+            # for step in tqdm(range(MAX_STEP)):
+            for step in range(MAX_STEP):
                 # if episode % 5 == 1:
                 #     env.render()
                 action = agent.chose_action(state)
-                # print(action)
-                writer.add_scalar(tag="action", step=step_iter, value=action)
-                action_list.append(action)
                 next_state, reward ,done = env.step(action, step)
                 next_state = next_state.reshape(env.channel_num * env.time_step)
 
                 reward_all += reward
-                writer.add_scalar(tag="reward/reward", step=step_iter, value=reward)
-                # reward_list.append(float(reward_all)/float(step + 1))
-                reward_list.append(reward_all)
-                writer.add_scalar(tag="reward/reward_all", step=step_iter, value=reward_all)
+                action_list.append(action)
+                if episode == (EPISODES - 1):
+                    reward_list.append(reward_all)
+                    writer.add_scalar(tag="action/last_episods", step=step, value=action)
+                    writer.add_scalar(tag="reward/reward", step=step, value=reward)
+
 
                   # 存储
                 agent.add_memory(state, action, reward, next_state, done)
 
-                if len(agent.memory) > BATCH_SIZE * 4:  # 采样
+                if len(agent.memory) > BATCH_SIZE * 2:  # 采样
                     batch_state, batch_action, batch_reward, batch_next_state, batch_done = agent.simple_memory(BATCH_SIZE)
 
                     loss = agent.train(state=batch_state,  # 训练
@@ -137,7 +137,9 @@ def Train_DQN(env, agent):
                 #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
 
                 state = next_state
-                step_iter += 1
+                # step_iter += 1
+            # writer.add_histogram(tag='reward/reward_all', values=reward_list, step=episode, buckets=10)
+            writer.add_histogram(tag='action/action_list', values=action_list, step=episode, buckets=env.action_space)
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
 
@@ -152,7 +154,7 @@ def Train_DRQN(env, agent):
     print("******************开始DRQN训练*********************")
 
     update_iter = 0
-    step_iter = 0
+    # step_iter = 0
     # reward_list = []
     reward_list_epsiod = []
 
@@ -166,26 +168,25 @@ def Train_DRQN(env, agent):
             reward_list = []
             action_list = []
             # training
-            for step in tqdm(range(MAX_STEP)):
+            # for step in tqdm(range(MAX_STEP)):
+            for step in range(MAX_STEP):
                 # if episode % 5 == 1:
                 #     env.render()
                 action = agent.chose_action(state)
-                # print(action)
-                action_list.append(action)
-                writer.add_scalar(tag="action", step=step_iter, value=action)
                 next_state, reward, done = env.step(action, step)
                 next_state = next_state.reshape(env.channel_num * env.time_step)
 
                 reward_all += reward
-                writer.add_scalar(tag="reward/reward", step=step_iter, value=reward)
-                # reward_list.append(float(reward_all)/float(step + 1))
-                reward_list.append(reward_all)
-                writer.add_scalar(tag="reward/reward_all", step=step_iter, value=reward_all)
+                action_list.append(action)
+                if episode == (EPISODES - 1):
+                    reward_list.append(reward_all)
+                    writer.add_scalar(tag="action/last_episods", step=step, value=action)
+                    writer.add_scalar(tag="reward/reward", step=step, value=reward)
 
                 # 存储
                 agent.add_memory(state, action, reward, next_state, done)
 
-                if len(agent.memory) > BATCH_SIZE * 4:  # 采样
+                if len(agent.memory) > BATCH_SIZE * 2:  # 采样
                     batch_state, batch_action, batch_reward, batch_next_state, batch_done = agent.simple_memory(BATCH_SIZE)
 
                     loss = agent.train(state=batch_state,  # 训练
@@ -214,16 +215,21 @@ def Train_DRQN(env, agent):
 
                 # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
                 #     print(
-                #         "epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+                #         "epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}]
+                #         [success_rate = {}]".format(
                 #             episode, step, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
                 state = next_state
-                step_iter += 1
+                # step_iter += 1
+
+            # writer.add_histogram(tag='reward/reward_all', values=reward_list, step=episode, buckets=10)
+            writer.add_histogram(tag='action/action_list', values=action_list, step=episode, buckets=env.action_space)
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
 
             # print(
-            #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+            #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}]
+            #     [success_rate = {}]".format(
             #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
     return action_list, reward_list, loss_list, reward_list_epsiod
@@ -234,7 +240,7 @@ def Train_DCQN(env, agent):
     print("******************开始DCQN训练*********************")
 
     update_iter = 0
-    step_iter = 0
+    # step_iter = 0
     # reward_list = []
     reward_list_epsiod = []
 
@@ -247,24 +253,23 @@ def Train_DCQN(env, agent):
             reward_list = []
             action_list = []
             # training
-            for step in tqdm(range(MAX_STEP)):
+            # for step in tqdm(range(MAX_STEP)):
+            for step in range(MAX_STEP):
                 # if episode % 5 == 1:
                 #     env.render()
                 action = agent.chose_action(state)
-                action_list.append(action)
-                writer.add_scalar(tag="action", step=step_iter, value=action)
                 next_state, reward, done = env.step(action, step)
-
                 reward_all += reward
-                writer.add_scalar(tag="reward/reward", step=step_iter, value=reward)
-                # reward_list.append(float(reward_all)/float(step + 1))
-                reward_list.append(reward_all)
-                writer.add_scalar(tag="reward/reward_all", step=step_iter, value=reward_all)
+                action_list.append(action)
+                if episode == (EPISODES-1):
+                    reward_list.append(reward_all)
+                    writer.add_scalar(tag="action/last_episods", step=step, value=action)
+                    writer.add_scalar(tag="reward/reward", step=step, value=reward)
 
                   # 存储
                 agent.add_memory(state, action, reward, next_state, done)
 
-                if len(agent.memory) > BATCH_SIZE * 4:  # 采样
+                if len(agent.memory) > BATCH_SIZE * 2:  # 采样
                     batch_state, batch_action, batch_reward, batch_next_state, batch_done = agent.simple_memory(BATCH_SIZE)
 
                     loss = agent.train(state=batch_state,  # 训练
@@ -296,8 +301,10 @@ def Train_DCQN(env, agent):
                 #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
 
                 state = next_state
-                step_iter += 1
+                # step_iter += 1
 
+            # writer.add_histogram(tag='reward/reward_all', values=reward_list, step=episode, buckets=10)
+            writer.add_histogram(tag='action/action_list', values=action_list, step=episode, buckets=env.action_space)
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
 
@@ -665,12 +672,12 @@ if __name__ == "__main__":
         plt.figure()
         sum = np.array([
                         # action_list_AC[-90:],
+                        action_list_DQN[-90:],
                         action_list_DCQN[-90:],
                         action_list_DRQN[-90:],
-                        action_list_DQN[-90:],
                         # action_list_random[-50:],
                         ]).reshape([3, -1])
-        sns.heatmap(sum, cmap='Reds', yticklabels=['DCQN', 'DRQN', 'DQN'])
+        sns.heatmap(sum, cmap='Reds', yticklabels=['DQN', 'DCQN', 'DRQN'])
         plt.xlabel('time_slots')
         plt.ylabel('RL_agent_type')
         plt.title('agent_action(-50)')

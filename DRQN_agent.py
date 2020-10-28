@@ -22,7 +22,7 @@ class DeepQNetwork():
         self.gamma = gamma
         self.epsilon = epsilon
         self.n_steps = 1
-        self.cell_size = 20
+        self.cell_size = [200,64,32]
 
         # for gym:
         # self.action_dim = env.action_space.n
@@ -54,11 +54,23 @@ class DeepQNetwork():
         with tf.variable_scope(scope, reuse=False):
             # hidden = hiddens[0]
             l_in = tf.reshape(inpt, [-1, self.n_steps, self.state_dim], name='2_3D')
-            lstm_cell = tf.contrib.rnn.BasicLSTMCell(self.cell_size, forget_bias=1.0, state_is_tuple=True)
-            cell_outputs, cell_final_state = tf.nn.dynamic_rnn(lstm_cell, l_in, dtype=tf.float32)
-            reduce_out = cell_outputs[:,-1,:]
-            l_out = tf.reshape(reduce_out, [-1, self.cell_size], name='3_2D')
-            out = layers.fully_connected(l_out, num_outputs=num_actions, activation_fn=None)
+            lstm_cell1 = tf.contrib.rnn.BasicLSTMCell(self.cell_size[0], forget_bias=1.0, state_is_tuple=True, name='lstm_lay1')
+            cell_outputs1, cell_final_state1 = tf.nn.dynamic_rnn(lstm_cell1, l_in, dtype=tf.float32)
+            reduce_out1 = cell_outputs1[:,-1,:]
+
+            # l_in2 = tf.reshape(reduce_out1, [-1, self.n_steps, self.cell_size[0]], name='2_3D')
+            # lstm_cell2 = tf.contrib.rnn.BasicLSTMCell(self.cell_size[1], forget_bias=1.0, state_is_tuple=True, name='lstm_lay2')
+            # cell_outputs2, cell_final_state2 = tf.nn.dynamic_rnn(lstm_cell2, l_in2, dtype=tf.float32)
+            # reduce_out2 = cell_outputs2[:, -1, :]
+
+            # l_in3 = tf.reshape(reduce_out2, [-1, self.n_steps, self.cell_size[1]], name='2_3D')
+            # lstm_cell3 = tf.contrib.rnn.BasicLSTMCell(self.cell_size[2], forget_bias=1.0, state_is_tuple=True, name='lstm_lay3')
+            # cell_outputs3, cell_final_state3 = tf.nn.dynamic_rnn(lstm_cell3, l_in3, dtype=tf.float32)
+            # reduce_out3 = cell_outputs3[:, -1, :]
+
+            l_out = tf.reshape(reduce_out1, [-1, self.cell_size[0]], name='3_2D')
+            l1 = layers.fully_connected(l_out, num_outputs=200, activation_fn=tf.nn.relu)
+            out = layers.fully_connected(l1, num_outputs=num_actions, activation_fn=None)
             return out
 
 

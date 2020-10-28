@@ -29,7 +29,7 @@ class DeepQNetwork():
         self.height = env.time_step
         self.width = env.channel_num
         self.in_channel = 1
-        self.out_channel = 200
+        self.out_channel = [200,64,32]
 
 
         # for gym:
@@ -59,14 +59,33 @@ class DeepQNetwork():
 
         with tf.variable_scope(scope, reuse=False):
             cnn_in = tf.reshape(inpt, [-1, self.width, self.height, self.in_channel], name='1_3D')
-            W_conv1 = tf.Variable(tf.truncated_normal([2, 2, self.in_channel, self.out_channel], stddev=0.1)) # 滤波器为[filter_width, filter_height, in_channels, out_channels]
-            b_conv1 = tf.Variable(tf.constant(0.1, shape=[self.out_channel]))  # 4个输出需要4个偏置
-            cnn_layer = tf.nn.conv2d(cnn_in, W_conv1, strides=[1, 1, 1, 1], padding='SAME') + b_conv1
-            h_conv1 = tf.nn.relu(cnn_layer)
+            W_conv1 = tf.Variable(tf.truncated_normal([2, 2, self.in_channel, self.out_channel[0]], stddev=0.1)) # 滤波器为[filter_width, filter_height, in_channels, out_channels]
+            b_conv1 = tf.Variable(tf.constant(0.1, shape=[self.out_channel[0]]))  # 4个输出需要4个偏置
+            cnn_layer1 = tf.nn.conv2d(cnn_in, W_conv1, strides=[1, 1, 1, 1], padding='SAME') + b_conv1
+            h_conv1 = tf.nn.relu(cnn_layer1)
             conv1 = tf.nn.max_pool(h_conv1, ksize=[1, 2, 2, 1], strides=[1, 1, 1, 1], padding="SAME") #[1, height, width, 1]
                                                                                                     #[1,strids,strids,1]
 
-            l_out = tf.reshape(conv1, [-1, self.height * self.width * self.out_channel], name='3_1D')
+            W_conv2 = tf.Variable(tf.truncated_normal([2, 2, self.out_channel[0], self.out_channel[1]],
+                                                      stddev=0.1))  # 滤波器为[filter_width, filter_height, in_channels, out_channels]
+            b_conv2 = tf.Variable(tf.constant(0.1, shape=[self.out_channel[1]]))  # 4个输出需要4个偏置
+            cnn_layer2 = tf.nn.conv2d(conv1, W_conv2, strides=[1, 1, 1, 1], padding='SAME') + b_conv2
+            h_conv2 = tf.nn.relu(cnn_layer2)
+            conv2 = tf.nn.max_pool(h_conv2, ksize=[1, 2, 2, 1], strides=[1, 1, 1, 1],
+                                   padding="SAME")  # [1, height, width, 1]
+            # [1,strids,strids,1]
+
+            W_conv3 = tf.Variable(tf.truncated_normal([2, 2, self.out_channel[1], self.out_channel[2]],
+                                                      stddev=0.1))  # 滤波器为[filter_width, filter_height, in_channels, out_channels]
+            b_conv3 = tf.Variable(tf.constant(0.1, shape=[self.out_channel[2]]))  # 4个输出需要4个偏置
+            cnn_layer3 = tf.nn.conv2d(conv2, W_conv3, strides=[1, 1, 1, 1], padding='SAME') + b_conv3
+            h_conv3 = tf.nn.relu(cnn_layer3)
+            conv3 = tf.nn.max_pool(h_conv3, ksize=[1, 2, 2, 1], strides=[1, 1, 1, 1],
+                                   padding="SAME")  # [1, height, width, 1]
+            # [1,strids,strids,1]
+
+
+            l_out = tf.reshape(conv3, [-1, self.height * self.width * self.out_channel[-1]], name='3_1D')
             l1 = layers.fully_connected(l_out, num_outputs=200, activation_fn=tf.nn.relu)
             out = layers.fully_connected(l1, num_outputs=num_actions, activation_fn=None)
             return out
