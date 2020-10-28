@@ -1,4 +1,6 @@
 import tensorflow as tf
+from visualdl import LogWriter
+from PIL import Image
 import numpy as np
 import random
 import seaborn as sns
@@ -25,14 +27,15 @@ import DSA_env as ENV
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
 MEMORY_SIZE = 5000
-EPISODES = 2
-MAX_STEP = 3000 # 注意小于state总时隙数
+EPISODES = 1
+MAX_STEP = 4000 # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
 EXPLOR_PERIOD = ((EPISODES * MAX_STEP) // 40)
 # print(EXPLOR_PERIOD)
 SHOW_PERIOD = 400
 layers_list = [200,200]
+
 
 def random_chose(env):
     print("******************开始随机对比*********************")
@@ -63,215 +66,244 @@ def random_chose(env):
         #         reward_all) / float(step + 1)))
     return action_list, reward_list, reward_list_epsiod
 
+
 def Train_DQN(env, agent):
 
     print("******************开始DQN训练*********************")
 
     update_iter = 0
+    step_iter = 0
     # reward_list = []
     reward_list_epsiod = []
 
     loss_list = []
     # 开始训练
-    for episode in tqdm(range(EPISODES)):
-        state = env.reset()
-        state = state.reshape(env.channel_num * env.time_step)
-        reward_all = 0
-        reward_list = []
-        action_list = []
-        # training
-        for step in tqdm(range(MAX_STEP)):
-            # if episode % 5 == 1:
-            #     env.render()
-            action = agent.chose_action(state)
-            # print(action)
-            action_list.append(action)
-            next_state, reward ,done = env.step(action, step)
-            next_state = next_state.reshape(env.channel_num * env.time_step)
+    with LogWriter(logdir="./log/train/DQN") as writer:
+        for episode in tqdm(range(EPISODES)):
+            state = env.reset()
+            state = state.reshape(env.channel_num * env.time_step)
+            reward_all = 0
+            reward_list = []
+            action_list = []
+            # training
+            for step in tqdm(range(MAX_STEP)):
+                # if episode % 5 == 1:
+                #     env.render()
+                action = agent.chose_action(state)
+                # print(action)
+                writer.add_scalar(tag="action", step=step_iter, value=action)
+                action_list.append(action)
+                next_state, reward ,done = env.step(action, step)
+                next_state = next_state.reshape(env.channel_num * env.time_step)
 
-            reward_all += reward
-            # reward_list.append(float(reward_all)/float(step + 1))
-            reward_list.append(reward_all)
+                reward_all += reward
+                writer.add_scalar(tag="reward/reward", step=step_iter, value=reward)
+                # reward_list.append(float(reward_all)/float(step + 1))
+                reward_list.append(reward_all)
+                writer.add_scalar(tag="reward/reward_all", step=step_iter, value=reward_all)
 
-              # 存储
-            agent.add_memory(state, action, reward, next_state, done)
+                  # 存储
+                agent.add_memory(state, action, reward, next_state, done)
 
-            if len(agent.memory) > BATCH_SIZE * 4:  # 采样
-                batch_state, batch_action, batch_reward, batch_next_state, batch_done = agent.simple_memory(BATCH_SIZE)
+                if len(agent.memory) > BATCH_SIZE * 4:  # 采样
+                    batch_state, batch_action, batch_reward, batch_next_state, batch_done = agent.simple_memory(BATCH_SIZE)
 
-                loss = agent.train(state=batch_state,  # 训练
-                                 reward=batch_reward,
-                                 action=batch_action,
-                                 state_next=batch_next_state,
-                                 done=batch_done
-                                 )
-                # DQN.write.add_summary(summery, update_iter)  #记录损失数据
-                update_iter += 1
+                    loss = agent.train(state=batch_state,  # 训练
+                                     reward=batch_reward,
+                                     action=batch_action,
+                                     state_next=batch_next_state,
+                                     done=batch_done
+                                     )
+                    # DQN.write.add_summary(summery, update_iter)  #记录损失数据
+                    update_iter += 1
+                    writer.add_scalar(tag="loss", step=update_iter, value=loss)
 
-                loss_list.append(loss)  # 用于绘图
+                    loss_list.append(loss)  # 用于绘图
 
-            if update_iter % UPDATE_PERIOD == 1:  # 更新target网络
-                agent.update_prmt()
+                if update_iter % UPDATE_PERIOD == 1:  # 更新target网络
+                    agent.update_prmt()
 
-            if update_iter % EXPLOR_PERIOD == 1:  # 减小探索概率
-                agent.decay_epsilon()
+                if update_iter % EXPLOR_PERIOD == 1:  # 减小探索概率
+                    agent.decay_epsilon()
+                    writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
 
-            # if done:
-            #     if episode % 10 == 1:
-            #         print("episode = {}  step = {} [reward_all = {}]".format(episode, step, reward_all))
-            #     reward_list.append(step)
-            #     break
+                # if done:
+                #     if episode % 10 == 1:
+                #         print("episode = {}  step = {} [reward_all = {}]".format(episode, step, reward_all))
+                #     reward_list.append(step)
+                #     break
 
-            # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
-            #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
+                # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
+                #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
 
-            state = next_state
-        reward_list_epsiod.append(reward_all)
+                state = next_state
+                step_iter += 1
+            reward_list_epsiod.append(reward_all)
+            writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
 
-        # print(
-        #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
-        #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
+            # print(
+            #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+            #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
     return action_list, reward_list, loss_list, reward_list_epsiod
+
 
 def Train_DRQN(env, agent):
     print("******************开始DRQN训练*********************")
 
     update_iter = 0
+    step_iter = 0
     # reward_list = []
     reward_list_epsiod = []
 
     loss_list = []
     # 开始训练
-    for episode in tqdm(range(EPISODES)):
-        state = env.reset()
-        state = state.reshape(env.channel_num * env.time_step)
-        reward_all = 0
-        reward_list = []
-        action_list = []
-        # training
-        for step in tqdm(range(MAX_STEP)):
-            # if episode % 5 == 1:
-            #     env.render()
-            action = agent.chose_action(state)
-            # print(action)
-            action_list.append(action)
-            next_state, reward, done = env.step(action, step)
-            next_state = next_state.reshape(env.channel_num * env.time_step)
+    with LogWriter(logdir="./log/train/DRQN") as writer:
+        for episode in tqdm(range(EPISODES)):
+            state = env.reset()
+            state = state.reshape(env.channel_num * env.time_step)
+            reward_all = 0
+            reward_list = []
+            action_list = []
+            # training
+            for step in tqdm(range(MAX_STEP)):
+                # if episode % 5 == 1:
+                #     env.render()
+                action = agent.chose_action(state)
+                # print(action)
+                action_list.append(action)
+                writer.add_scalar(tag="action", step=step_iter, value=action)
+                next_state, reward, done = env.step(action, step)
+                next_state = next_state.reshape(env.channel_num * env.time_step)
 
-            reward_all += reward
-            # reward_list.append(float(reward_all)/float(step + 1))
-            reward_list.append(reward_all)
+                reward_all += reward
+                writer.add_scalar(tag="reward/reward", step=step_iter, value=reward)
+                # reward_list.append(float(reward_all)/float(step + 1))
+                reward_list.append(reward_all)
+                writer.add_scalar(tag="reward/reward_all", step=step_iter, value=reward_all)
 
-            # 存储
-            agent.add_memory(state, action, reward, next_state, done)
+                # 存储
+                agent.add_memory(state, action, reward, next_state, done)
 
-            if len(agent.memory) > BATCH_SIZE * 4:  # 采样
-                batch_state, batch_action, batch_reward, batch_next_state, batch_done = agent.simple_memory(BATCH_SIZE)
+                if len(agent.memory) > BATCH_SIZE * 4:  # 采样
+                    batch_state, batch_action, batch_reward, batch_next_state, batch_done = agent.simple_memory(BATCH_SIZE)
 
-                loss = agent.train(state=batch_state,  # 训练
-                                   reward=batch_reward,
-                                   action=batch_action,
-                                   state_next=batch_next_state,
-                                   done=batch_done
-                                   )
-                # DQN.write.add_summary(summery, update_iter)  #记录损失数据
-                update_iter += 1
+                    loss = agent.train(state=batch_state,  # 训练
+                                       reward=batch_reward,
+                                       action=batch_action,
+                                       state_next=batch_next_state,
+                                       done=batch_done
+                                       )
+                    # DQN.write.add_summary(summery, update_iter)  #记录损失数据
+                    update_iter += 1
+                    writer.add_scalar(tag="loss", step=update_iter, value=loss)
+                    loss_list.append(loss)  # 用于绘图
 
-                loss_list.append(loss)  # 用于绘图
+                if update_iter % UPDATE_PERIOD == 1:  # 更新target网络
+                    agent.update_prmt()
 
-            if update_iter % UPDATE_PERIOD == 1:  # 更新target网络
-                agent.update_prmt()
+                if update_iter % EXPLOR_PERIOD == 1:  # 减小探索概率
+                    agent.decay_epsilon()
+                    writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
 
-            if update_iter % EXPLOR_PERIOD == 1:  # 减小探索概率
-                agent.decay_epsilon()
+                # if done:
+                #     if episode % 10 == 1:
+                #         print("episode = {}  step = {} [reward_all = {}]".format(episode, step, reward_all))
+                #     reward_list.append(step)
+                #     break
 
-            # if done:
-            #     if episode % 10 == 1:
-            #         print("episode = {}  step = {} [reward_all = {}]".format(episode, step, reward_all))
-            #     reward_list.append(step)
-            #     break
+                # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
+                #     print(
+                #         "epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+                #             episode, step, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
-            # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
-            #     print(
-            #         "epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
-            #             episode, step, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
+                state = next_state
+                step_iter += 1
+            reward_list_epsiod.append(reward_all)
+            writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
 
-            state = next_state
-        reward_list_epsiod.append(reward_all)
-
-        # print(
-        #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
-        #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
+            # print(
+            #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+            #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
     return action_list, reward_list, loss_list, reward_list_epsiod
+
 
 def Train_DCQN(env, agent):
 
     print("******************开始DCQN训练*********************")
 
     update_iter = 0
+    step_iter = 0
     # reward_list = []
     reward_list_epsiod = []
 
     loss_list = []
     # 开始训练
-    for episode in tqdm(range(EPISODES)):
-        state = env.reset()
-        reward_all = 0
-        reward_list = []
-        action_list = []
-        # training
-        for step in tqdm(range(MAX_STEP)):
-            # if episode % 5 == 1:
-            #     env.render()
-            action = agent.chose_action(state)
-            action_list.append(action)
-            next_state, reward, done = env.step(action, step)
+    with LogWriter(logdir="./log/train/DCQN") as writer:
+        for episode in tqdm(range(EPISODES)):
+            state = env.reset()
+            reward_all = 0
+            reward_list = []
+            action_list = []
+            # training
+            for step in tqdm(range(MAX_STEP)):
+                # if episode % 5 == 1:
+                #     env.render()
+                action = agent.chose_action(state)
+                action_list.append(action)
+                writer.add_scalar(tag="action", step=step_iter, value=action)
+                next_state, reward, done = env.step(action, step)
 
-            reward_all += reward
-            # reward_list.append(float(reward_all)/float(step + 1))
-            reward_list.append(reward_all)
+                reward_all += reward
+                writer.add_scalar(tag="reward/reward", step=step_iter, value=reward)
+                # reward_list.append(float(reward_all)/float(step + 1))
+                reward_list.append(reward_all)
+                writer.add_scalar(tag="reward/reward_all", step=step_iter, value=reward_all)
 
-              # 存储
-            agent.add_memory(state, action, reward, next_state, done)
+                  # 存储
+                agent.add_memory(state, action, reward, next_state, done)
 
-            if len(agent.memory) > BATCH_SIZE * 4:  # 采样
-                batch_state, batch_action, batch_reward, batch_next_state, batch_done = agent.simple_memory(BATCH_SIZE)
+                if len(agent.memory) > BATCH_SIZE * 4:  # 采样
+                    batch_state, batch_action, batch_reward, batch_next_state, batch_done = agent.simple_memory(BATCH_SIZE)
 
-                loss = agent.train(state=batch_state,  # 训练
-                                 reward=batch_reward,
-                                 action=batch_action,
-                                 state_next=batch_next_state,
-                                 done=batch_done
-                                 )
-                # DQN.write.add_summary(summery, update_iter)  #记录损失数据
-                update_iter += 1
+                    loss = agent.train(state=batch_state,  # 训练
+                                     reward=batch_reward,
+                                     action=batch_action,
+                                     state_next=batch_next_state,
+                                     done=batch_done
+                                     )
+                    # DQN.write.add_summary(summery, update_iter)  #记录损失数据
+                    update_iter += 1
+                    writer.add_scalar(tag="loss", step=update_iter, value=loss)
 
-                loss_list.append(loss)  # 用于绘图
+                    loss_list.append(loss)  # 用于绘图
 
-            if update_iter % UPDATE_PERIOD == 1:  # 更新target网络
-                agent.update_prmt()
+                if update_iter % UPDATE_PERIOD == 1:  # 更新target网络
+                    agent.update_prmt()
 
-            if update_iter % EXPLOR_PERIOD == 1:  # 减小探索概率
-                agent.decay_epsilon()
+                if update_iter % EXPLOR_PERIOD == 1:  # 减小探索概率
+                    agent.decay_epsilon()
+                    writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
 
-            # if done:
-            #     if episode % 10 == 1:
-            #         print("episode = {}  step = {} [reward_all = {}]".format(episode, step, reward_all))
-            #     reward_list.append(step)
-            #     break
+                # if done:
+                #     if episode % 10 == 1:
+                #         print("episode = {}  step = {} [reward_all = {}]".format(episode, step, reward_all))
+                #     reward_list.append(step)
+                #     break
 
-            # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
-            #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
+                # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
+                #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
 
-            state = next_state
+                state = next_state
+                step_iter += 1
 
-        reward_list_epsiod.append(reward_all)
+            reward_list_epsiod.append(reward_all)
+            writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
 
-        # print(
-        #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
-        #         episode, agent.epsilon ,loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
+            # print(
+            #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
+            #         episode, agent.epsilon ,loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
     return action_list, reward_list, loss_list, reward_list_epsiod
 
@@ -586,49 +618,49 @@ if __name__ == "__main__":
         # plt.ylabel("loss")
         # plt.title("AC_loss")
 
-        plt.figure()
-        plt.plot(loss_list_DQN, 'r-')
-        plt.xlabel("(train_steps)")
-        plt.ylabel("loss")
-        plt.title("DQN_loss")
-
-        plt.figure()
-        plt.plot(loss_list_DCQN, 'r-')
-        plt.xlabel("(train_steps)")
-        plt.ylabel("loss")
-        plt.title("DCQN_loss")
-
-        plt.figure()
-        plt.plot(loss_list_DRQN, 'r-')
-        plt.xlabel("(train_steps)")
-        plt.ylabel("loss")
-        plt.title("DRQN_loss")
-
-        plt.figure()
-        plt.plot(np.log(loss_list_DCQN), 'r-')
-        plt.xlabel("(train_steps)")
-        plt.ylabel("loss_(dB)")
-        plt.title("DCQN_loss_dB")
-
         # plt.figure()
-        # plt.plot(np.log(loss_list_AC), 'r-')
+        # plt.plot(loss_list_DQN, 'r-')
+        # plt.xlabel("(train_steps)")
+        # plt.ylabel("loss")
+        # plt.title("DQN_loss")
+        #
+        # plt.figure()
+        # plt.plot(loss_list_DCQN, 'r-')
+        # plt.xlabel("(train_steps)")
+        # plt.ylabel("loss")
+        # plt.title("DCQN_loss")
+        #
+        # plt.figure()
+        # plt.plot(loss_list_DRQN, 'r-')
+        # plt.xlabel("(train_steps)")
+        # plt.ylabel("loss")
+        # plt.title("DRQN_loss")
+        #
+        # plt.figure()
+        # plt.plot(np.log(loss_list_DCQN), 'r-')
         # plt.xlabel("(train_steps)")
         # plt.ylabel("loss_(dB)")
-        # plt.title("AC_loss_dB")
-
-        plt.figure()
-        plt.plot(np.log(loss_list_DRQN), 'r-')
-        plt.xlabel("(train_steps)")
-        plt.ylabel("loss_(dB)")
-        plt.title("DRQN_loss_dB")
-
-
-
-        plt.figure()
-        plt.plot(np.log(loss_list_DQN), 'r-')
-        plt.xlabel("(train_steps)")
-        plt.ylabel("loss_(dB)")
-        plt.title("DQN_loss_dB")
+        # plt.title("DCQN_loss_dB")
+        #
+        # # plt.figure()
+        # # plt.plot(np.log(loss_list_AC), 'r-')
+        # # plt.xlabel("(train_steps)")
+        # # plt.ylabel("loss_(dB)")
+        # # plt.title("AC_loss_dB")
+        #
+        # plt.figure()
+        # plt.plot(np.log(loss_list_DRQN), 'r-')
+        # plt.xlabel("(train_steps)")
+        # plt.ylabel("loss_(dB)")
+        # plt.title("DRQN_loss_dB")
+        #
+        #
+        #
+        # plt.figure()
+        # plt.plot(np.log(loss_list_DQN), 'r-')
+        # plt.xlabel("(train_steps)")
+        # plt.ylabel("loss_(dB)")
+        # plt.title("DQN_loss_dB")
 
         plt.figure()
         sum = np.array([

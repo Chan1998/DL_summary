@@ -12,15 +12,17 @@ import matplotlib.pyplot as plt
 # 只有一个信道，间歇占用[001001001001]
 
 # 读取.文件
-data_in = pd.read_csv("./channel_data/real_data_trace.csv")
-data_in = data_in.drop("index",axis=1)
+data_in = pd.read_csv("./channel_data/period_state8.csv")
+# data_in = data_in.drop("index",axis=1)
 # print(np.shape(data_in))
 
+
 class DSA():
+
     def __init__(self):
         self.channel_num = np.shape(data_in)[1]   # 可用信道数
         print(self.channel_num)
-        self.time_step = 7   # 输入状态历史时间步数
+        self.time_step = 100   # 输入状态历史时间步数
 
         self.action_space = self.channel_num + 1  # (0表示不接入信道，其余表示接入对应信道)
         self.observation_space = self.channel_num * self.time_step  # [[state * self.time_step] * self.channel_num]每个信道时间步数 * 信道个数
