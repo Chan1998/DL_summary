@@ -10,7 +10,7 @@ import tensorflow.contrib.layers as layers
 
 # layers_list = [200]
 
-MEMORY_SIZE = 5000
+MEMORY_SIZE = 2000
 BATCH_SIZE = 32
 
 
@@ -29,7 +29,7 @@ class DeepQNetwork():
         self.height = env.time_step
         self.width = env.channel_num
         self.in_channel = 1
-        self.out_channel = [200,64,32]
+        self.out_channel = [32,64,200]
 
 
         # for gym:
@@ -59,14 +59,14 @@ class DeepQNetwork():
 
         with tf.variable_scope(scope, reuse=False):
             cnn_in = tf.reshape(inpt, [-1, self.width, self.height, self.in_channel], name='1_3D')
-            W_conv1 = tf.Variable(tf.truncated_normal([2, 2, self.in_channel, self.out_channel[0]], stddev=0.1)) # 滤波器为[filter_width, filter_height, in_channels, out_channels]
+            W_conv1 = tf.Variable(tf.truncated_normal([4, 4, self.in_channel, self.out_channel[0]], stddev=0.1)) # 滤波器为[filter_width, filter_height, in_channels, out_channels]
             b_conv1 = tf.Variable(tf.constant(0.1, shape=[self.out_channel[0]]))  # 4个输出需要4个偏置
             cnn_layer1 = tf.nn.conv2d(cnn_in, W_conv1, strides=[1, 1, 1, 1], padding='SAME') + b_conv1
             h_conv1 = tf.nn.relu(cnn_layer1)
             conv1 = tf.nn.max_pool(h_conv1, ksize=[1, 2, 2, 1], strides=[1, 1, 1, 1], padding="SAME") #[1, height, width, 1]
                                                                                                     #[1,strids,strids,1]
 
-            W_conv2 = tf.Variable(tf.truncated_normal([2, 2, self.out_channel[0], self.out_channel[1]],
+            W_conv2 = tf.Variable(tf.truncated_normal([4, 4, self.out_channel[0], self.out_channel[1]],
                                                       stddev=0.1))  # 滤波器为[filter_width, filter_height, in_channels, out_channels]
             b_conv2 = tf.Variable(tf.constant(0.1, shape=[self.out_channel[1]]))  # 4个输出需要4个偏置
             cnn_layer2 = tf.nn.conv2d(conv1, W_conv2, strides=[1, 1, 1, 1], padding='SAME') + b_conv2

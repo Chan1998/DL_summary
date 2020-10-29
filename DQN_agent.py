@@ -10,7 +10,7 @@ import tensorflow.contrib.layers as layers
 
 layers_list = [200,64,32,200]
 
-MEMORY_SIZE = 5000
+MEMORY_SIZE = 2000
 
 
 ##built class for the DQN

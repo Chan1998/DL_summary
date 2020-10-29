@@ -26,9 +26,9 @@ import DSA_env as ENV
 # ENV = "Pendulum-v0" #连续动作比较复杂，DQN不行
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
-MEMORY_SIZE = 5000
-EPISODES = 10
-MAX_STEP = 2000  # 注意小于state总时隙数
+MEMORY_SIZE = 2000
+EPISODES = 30
+MAX_STEP = 500  # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
 EXPLOR_PERIOD = ((EPISODES * MAX_STEP) // 40)
@@ -53,7 +53,7 @@ def random_chose(env):
         for step in range(MAX_STEP):
             # if episode % 5 == 1:
             #     env.render()
-            action = random.randint(0, env.action_space)
+            action = random.randint(0, env.action_space - 1)
             action_list.append(action)
             _, reward,  _  = env.step(action, step)
             reward_all += reward
@@ -75,15 +75,17 @@ def Train_DQN(env, agent):
     step_iter = 0
     # reward_list = []
     reward_list_epsiod = []
+    do_num_list = []
 
     loss_list = []
+    reward_list = []
     # 开始训练
     with LogWriter(logdir="./log/train/DQN") as writer:
         for episode in tqdm(range(EPISODES)):
             state = env.reset()
             state = state.reshape(env.channel_num * env.time_step)
             reward_all = 0
-            reward_list = []
+            do_num = 0
             action_list = []
             # training
             # for step in tqdm(range(MAX_STEP)):
@@ -91,6 +93,8 @@ def Train_DQN(env, agent):
                 # if episode % 5 == 1:
                 #     env.render()
                 action = agent.chose_action(state)
+                if action:
+                    do_num += 1
                 next_state, reward ,done = env.step(action, step)
                 next_state = next_state.reshape(env.channel_num * env.time_step)
 
@@ -142,12 +146,12 @@ def Train_DQN(env, agent):
             writer.add_histogram(tag='action/action_list', values=action_list, step=episode, buckets=env.action_space)
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
-
+            do_num_list.append(do_num)
             # print(
             #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
             #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
-    return action_list, reward_list, loss_list, reward_list_epsiod
+    return action_list, reward_list, loss_list, reward_list_epsiod, do_num_list
 
 
 def Train_DRQN(env, agent):
@@ -157,15 +161,16 @@ def Train_DRQN(env, agent):
     # step_iter = 0
     # reward_list = []
     reward_list_epsiod = []
-
+    do_num_list = []
     loss_list = []
+    reward_list = []
     # 开始训练
     with LogWriter(logdir="./log/train/DRQN") as writer:
         for episode in tqdm(range(EPISODES)):
             state = env.reset()
             state = state.reshape(env.channel_num * env.time_step)
             reward_all = 0
-            reward_list = []
+            do_num = 0
             action_list = []
             # training
             # for step in tqdm(range(MAX_STEP)):
@@ -173,6 +178,8 @@ def Train_DRQN(env, agent):
                 # if episode % 5 == 1:
                 #     env.render()
                 action = agent.chose_action(state)
+                if action:
+                    do_num += 1
                 next_state, reward, done = env.step(action, step)
                 next_state = next_state.reshape(env.channel_num * env.time_step)
 
@@ -226,13 +233,14 @@ def Train_DRQN(env, agent):
             writer.add_histogram(tag='action/action_list', values=action_list, step=episode, buckets=env.action_space)
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
+            do_num_list.append(do_num)
 
             # print(
             #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}]
             #     [success_rate = {}]".format(
             #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
-    return action_list, reward_list, loss_list, reward_list_epsiod
+    return action_list, reward_list, loss_list, reward_list_epsiod, do_num_list
 
 
 def Train_DCQN(env, agent):
@@ -243,14 +251,17 @@ def Train_DCQN(env, agent):
     # step_iter = 0
     # reward_list = []
     reward_list_epsiod = []
+    do_num_list = []
+
 
     loss_list = []
+    reward_list = []
     # 开始训练
     with LogWriter(logdir="./log/train/DCQN") as writer:
         for episode in tqdm(range(EPISODES)):
             state = env.reset()
             reward_all = 0
-            reward_list = []
+            do_num = 0
             action_list = []
             # training
             # for step in tqdm(range(MAX_STEP)):
@@ -258,6 +269,8 @@ def Train_DCQN(env, agent):
                 # if episode % 5 == 1:
                 #     env.render()
                 action = agent.chose_action(state)
+                if action:
+                    do_num += 1
                 next_state, reward, done = env.step(action, step)
                 reward_all += reward
                 action_list.append(action)
@@ -307,12 +320,13 @@ def Train_DCQN(env, agent):
             writer.add_histogram(tag='action/action_list', values=action_list, step=episode, buckets=env.action_space)
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
+            do_num_list.append(do_num)
 
             # print(
             #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
             #         episode, agent.epsilon ,loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
 
-    return action_list, reward_list, loss_list, reward_list_epsiod
+    return action_list, reward_list, loss_list, reward_list_epsiod, do_num_list
 
 # def Test_DQN(env, agent):
 #     print("*******************开始测试**************")
@@ -461,7 +475,6 @@ def Train_AC(env, actor, critic):
 
     return action_list, reward_list, loss_list, reward_list_epsiod
 
-
 # def Test_AC(env, actor):
 #     print("*******************开始测试**************")
 #
@@ -569,17 +582,19 @@ if __name__ == "__main__":
         # P_G = PG.PolicyGradient(env, sess)
         # reward_list_PG, loss_list_PG = Train_PG(env, P_G)
 
+        # action_list_random, reward_list_random, epsiod_reward_list_random = random_chose(env)
+
         DCQN = dcqn.DeepQNetwork(env, sess)
-        action_list_DCQN, reward_list_DCQN, loss_list_DCQN, epsiod_reward_list_DCQN = Train_DCQN(env, DCQN)
+        action_list_DCQN, reward_list_DCQN, loss_list_DCQN, epsiod_reward_list_DCQN, do_num_DCQN = Train_DCQN(env, DCQN)
 
         # actor = AC.Actor(env, sess)  # 初始化Actor
         # critic = AC.Critic(env, sess)  # 初始化Critic
         # action_list_AC, reward_list_AC, loss_list_AC, epsiod_reward_list_AC = Train_AC(env, actor, critic)
 
         DRQN = drqn.DeepQNetwork(env, sess)
-        action_list_DRQN, reward_list_DRQN, loss_list_DRQN, epsiod_reward_list_DRQN = Train_DRQN(env, DRQN)
+        action_list_DRQN, reward_list_DRQN, loss_list_DRQN, epsiod_reward_list_DRQN, do_num_DRQN = Train_DRQN(env, DRQN)
 
-        # action_list_random, reward_list_random, epsiod_reward_list_random = random_chose(env)
+
 
         # # Test_AC(env, actor)
 
@@ -587,7 +602,7 @@ if __name__ == "__main__":
         # action_list_DDPG, reward_list_DDPG, loss_list_DDPG = Train_DDPG(env, DDPG)
 
         DQN = DQN.DeepQNetwork(env, sess)
-        action_list_DQN, reward_list_DQN, loss_list_DQN, epsiod_reward_list_DQN = Train_DQN(env, DQN)
+        action_list_DQN, reward_list_DQN, loss_list_DQN, epsiod_reward_list_DQN, do_num_DQN = Train_DQN(env, DQN)
         # Test_DQN(env, DQN)
 
 
@@ -596,10 +611,10 @@ if __name__ == "__main__":
         plt.figure()
         plt.plot(
                     # reward_list_AC[5:], 'y-',
-                    reward_list_DCQN[5:], 'm-',
-                    reward_list_DRQN[5:], 'b-',
-                    reward_list_DQN[5:], 'c-',
-                  # reward_list_random[5:], 'r-'
+                    reward_list_DCQN[5:], 'c-',
+                    reward_list_DRQN[5:], 'y-',
+                    reward_list_DQN[5:], 'm-',
+                    # reward_list_random[5:], 'r-'
                  )
         plt.xlabel("(steps)")
         plt.ylabel("success_rate")
@@ -609,15 +624,28 @@ if __name__ == "__main__":
         plt.figure()
         plt.plot(
                     # epsiod_reward_list_AC, 'y--',
-                    epsiod_reward_list_DCQN, 'm--',
-                    epsiod_reward_list_DRQN, 'b--',
-                    epsiod_reward_list_DQN, 'c--',
+                    epsiod_reward_list_DCQN, 'co-',
+                    epsiod_reward_list_DRQN, 'y<-',
+                    epsiod_reward_list_DQN, 'ms-',
                     # epsiod_reward_list_random, 'r--'
         )
         plt.xlabel("(epsiods)")
         plt.ylabel("success_number")
         plt.title("success_epsiod")
         plt.legend(['DCQN','DRQN','DQN'])
+
+        plt.figure()
+        plt.plot(
+            # epsiod_reward_list_AC, 'y--',
+            do_num_DCQN, 'co-',
+            do_num_DRQN, 'y<-',
+            do_num_DQN, 'ms-',
+            # epsiod_reward_list_random, 'r--'
+        )
+        plt.xlabel("(epsiods)")
+        plt.ylabel("do_number")
+        plt.title("do_num_epsiod")
+        plt.legend(['DCQN', 'DRQN', 'DQN'])
 
         # plt.figure()
         # plt.plot(loss_list_AC, 'r-')
@@ -643,11 +671,11 @@ if __name__ == "__main__":
         # plt.ylabel("loss")
         # plt.title("DRQN_loss")
         #
-        # plt.figure()
-        # plt.plot(np.log(loss_list_DCQN), 'r-')
-        # plt.xlabel("(train_steps)")
-        # plt.ylabel("loss_(dB)")
-        # plt.title("DCQN_loss_dB")
+        plt.figure()
+        plt.plot(np.log(loss_list_DCQN), 'r-')
+        plt.xlabel("(train_steps)")
+        plt.ylabel("loss_(dB)")
+        plt.title("DCQN_loss_dB")
         #
         # # plt.figure()
         # # plt.plot(np.log(loss_list_AC), 'r-')
@@ -655,19 +683,19 @@ if __name__ == "__main__":
         # # plt.ylabel("loss_(dB)")
         # # plt.title("AC_loss_dB")
         #
-        # plt.figure()
-        # plt.plot(np.log(loss_list_DRQN), 'r-')
-        # plt.xlabel("(train_steps)")
-        # plt.ylabel("loss_(dB)")
-        # plt.title("DRQN_loss_dB")
+        plt.figure()
+        plt.plot(np.log(loss_list_DRQN), 'r-')
+        plt.xlabel("(train_steps)")
+        plt.ylabel("loss_(dB)")
+        plt.title("DRQN_loss_dB")
         #
         #
         #
-        # plt.figure()
-        # plt.plot(np.log(loss_list_DQN), 'r-')
-        # plt.xlabel("(train_steps)")
-        # plt.ylabel("loss_(dB)")
-        # plt.title("DQN_loss_dB")
+        plt.figure()
+        plt.plot(np.log(loss_list_DQN), 'r-')
+        plt.xlabel("(train_steps)")
+        plt.ylabel("loss_(dB)")
+        plt.title("DQN_loss_dB")
 
         plt.figure()
         sum = np.array([
