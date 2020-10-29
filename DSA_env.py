@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 # 只有一个信道，间歇占用[001001001001]
 
 # 读取.文件
-data_in = pd.read_csv("./channel_data/correlated16.csv")
-# data_in = pd.read_csv("./channel_data/perfectly_correlated.csv")
+# data_in = pd.read_csv("./channel_data/correlated8.csv")
+data_in = pd.read_csv("./channel_data/perfectly_correlated.csv")
 # data_in = data_in.drop("index",axis=1)
 # print(np.shape(data_in))
 data_in = data_in[0:520]

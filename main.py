@@ -27,11 +27,11 @@ import DSA_env as ENV
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
 MEMORY_SIZE = 2000
-EPISODES = 30
+EPISODES = 40
 MAX_STEP = 500  # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
-EXPLOR_PERIOD = ((EPISODES * MAX_STEP) // 40)
+EXPLOR_PERIOD = (0.7 * (EPISODES * MAX_STEP) // 40)
 # print(EXPLOR_PERIOD)
 SHOW_PERIOD = 400
 # layers_list = [200,64]
@@ -129,7 +129,7 @@ def Train_DQN(env, agent):
 
                 if update_iter % EXPLOR_PERIOD == 1:  # 减小探索概率
                     agent.decay_epsilon()
-                    writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
+                    # writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
 
                 # if done:
                 #     if episode % 10 == 1:
@@ -147,6 +147,7 @@ def Train_DQN(env, agent):
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
             do_num_list.append(do_num)
+            writer.add_scalar(tag="action/episode", step=episode, value=do_num)
             # print(
             #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
             #         episode, agent.epsilon, loss, action, reward, reward_all, float(reward_all) / float(step + 1)))
@@ -212,7 +213,7 @@ def Train_DRQN(env, agent):
 
                 if update_iter % EXPLOR_PERIOD == 1:  # 减小探索概率
                     agent.decay_epsilon()
-                    writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
+                    # writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
 
                 # if done:
                 #     if episode % 10 == 1:
@@ -234,6 +235,7 @@ def Train_DRQN(env, agent):
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
             do_num_list.append(do_num)
+            writer.add_scalar(tag="action/episode", step=episode, value=do_num)
 
             # print(
             #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}]
@@ -302,7 +304,7 @@ def Train_DCQN(env, agent):
 
                 if update_iter % EXPLOR_PERIOD == 1:  # 减小探索概率
                     agent.decay_epsilon()
-                    writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
+                    # writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
 
                 # if done:
                 #     if episode % 10 == 1:
@@ -321,6 +323,7 @@ def Train_DCQN(env, agent):
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
             do_num_list.append(do_num)
+            writer.add_scalar(tag="action/episode", step=episode, value=do_num)
 
             # print(
             #     "epsiods = {} epsilon = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(
@@ -671,11 +674,11 @@ if __name__ == "__main__":
         # plt.ylabel("loss")
         # plt.title("DRQN_loss")
         #
-        plt.figure()
-        plt.plot(np.log(loss_list_DCQN), 'r-')
-        plt.xlabel("(train_steps)")
-        plt.ylabel("loss_(dB)")
-        plt.title("DCQN_loss_dB")
+        # plt.figure()
+        # plt.plot(np.log(loss_list_DCQN), 'r-')
+        # plt.xlabel("(train_steps)")
+        # plt.ylabel("loss_(dB)")
+        # plt.title("DCQN_loss_dB")
         #
         # # plt.figure()
         # # plt.plot(np.log(loss_list_AC), 'r-')
@@ -683,19 +686,19 @@ if __name__ == "__main__":
         # # plt.ylabel("loss_(dB)")
         # # plt.title("AC_loss_dB")
         #
-        plt.figure()
-        plt.plot(np.log(loss_list_DRQN), 'r-')
-        plt.xlabel("(train_steps)")
-        plt.ylabel("loss_(dB)")
-        plt.title("DRQN_loss_dB")
+        # plt.figure()
+        # plt.plot(np.log(loss_list_DRQN), 'r-')
+        # plt.xlabel("(train_steps)")
+        # plt.ylabel("loss_(dB)")
+        # plt.title("DRQN_loss_dB")
         #
         #
         #
-        plt.figure()
-        plt.plot(np.log(loss_list_DQN), 'r-')
-        plt.xlabel("(train_steps)")
-        plt.ylabel("loss_(dB)")
-        plt.title("DQN_loss_dB")
+        # plt.figure()
+        # plt.plot(np.log(loss_list_DQN), 'r-')
+        # plt.xlabel("(train_steps)")
+        # plt.ylabel("loss_(dB)")
+        # plt.title("DQN_loss_dB")
 
         plt.figure()
         sum = np.array([
