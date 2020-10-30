@@ -56,7 +56,7 @@ class DSA():
             reward = 0
             return np.array(self.state), reward, 0
 
-        if data_in["channel_"+str(action)][steps + self.time_step]:
+        if data_in["channel_"+str(action)][steps + self.time_step + random_start]:
             reward = 1
         else: reward = -1
         return np.array(self.state), reward, 0

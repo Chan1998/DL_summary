@@ -27,13 +27,13 @@ import DSA_env as ENV
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
 MEMORY_SIZE = 2000
-EPISODES = 5
-MAX_STEP = 200  # 注意小于state总时隙数
+EPISODES = 200
+MAX_STEP = 500  # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
-EXPLOR_PERIOD = (0.7 * (EPISODES * MAX_STEP) // 40)
+EXPLOR_PERIOD = (0.6 * (EPISODES * MAX_STEP) // 40)
 # print(EXPLOR_PERIOD)
-SHOW_PERIOD = 400
+# SHOW_PERIOD = 400
 # layers_list = [200,64]
 
 
@@ -42,30 +42,35 @@ def random_chose(env):
     print("******************开始随机对比*********************")
     # reward_list = []
     reward_list_epsiod = []
+    reward_list = []
+    do_num_list = []
 
 
     # 开始训练
     for episode in tqdm(range(EPISODES)):
-        state = env.reset()
+        state = env.reset(random_start=random_start_list[episode])
         reward_all = 0
-        reward_list = []
+        do_num = 0
         action_list = []
         # training
         for step in range(MAX_STEP):
             # if episode % 5 == 1:
             #     env.render()
             action = random.randint(0, env.action_space - 1)
+            if action:
+                do_num += 1
             action_list.append(action)
-            _, reward,  _  = env.step(action, step)
+            _, reward, _  = env.step(action, step, random_start=random_start_list[episode])
             reward_all += reward
             # reward_list.append(float(reward_all)/float(step + 1))
-            reward_list.append(reward_all)
+            if episode == (EPISODES - 1):
+                reward_list.append(reward_all)
         reward_list_epsiod.append(reward_all)
         # print("step = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(step, action,
         #                                                                                        state[-2] != action,
         #                                                                                        reward_all, float(
         #         reward_all) / float(step + 1)))
-    return action_list, reward_list, reward_list_epsiod
+    return action_list, reward_list, reward_list_epsiod, do_num_list
 
 
 def Train_DQN(env, agent):
@@ -570,17 +575,17 @@ if __name__ == "__main__":
         # P_G = PG.PolicyGradient(env, sess)
         # reward_list_PG, loss_list_PG = Train_PG(env, P_G)
 
-        # action_list_random, reward_list_random, epsiod_reward_list_random = random_chose(env)
+        # action_list_random, reward_list_random, episod_reward_list_random, do_num_Random = random_chose(env)
 
         DCQN = dcqn.DeepQNetwork(env, sess)
-        action_list_DCQN, reward_list_DCQN, loss_list_DCQN, epsiod_reward_list_DCQN, do_num_DCQN = Train_DCQN(env, DCQN)
+        action_list_DCQN, reward_list_DCQN, loss_list_DCQN, episod_reward_list_DCQN, do_num_DCQN = Train_DCQN(env, DCQN)
 
         # actor = AC.Actor(env, sess)  # 初始化Actor
         # critic = AC.Critic(env, sess)  # 初始化Critic
         # action_list_AC, reward_list_AC, loss_list_AC, epsiod_reward_list_AC = Train_AC(env, actor, critic)
 
         DRQN = drqn.DeepQNetwork(env, sess)
-        action_list_DRQN, reward_list_DRQN, loss_list_DRQN, epsiod_reward_list_DRQN, do_num_DRQN = Train_DRQN(env, DRQN)
+        action_list_DRQN, reward_list_DRQN, loss_list_DRQN, episod_reward_list_DRQN, do_num_DRQN = Train_DRQN(env, DRQN)
 
 
 
@@ -590,7 +595,7 @@ if __name__ == "__main__":
         # action_list_DDPG, reward_list_DDPG, loss_list_DDPG = Train_DDPG(env, DDPG)
 
         DQN = DQN.DeepQNetwork(env, sess)
-        action_list_DQN, reward_list_DQN, loss_list_DQN, epsiod_reward_list_DQN, do_num_DQN = Train_DQN(env, DQN)
+        action_list_DQN, reward_list_DQN, loss_list_DQN, episod_reward_list_DQN, do_num_DQN = Train_DQN(env, DQN)
         # Test_DQN(env, DQN)
 
 
@@ -612,14 +617,14 @@ if __name__ == "__main__":
         plt.figure()
         plt.plot(
                     # epsiod_reward_list_AC, 'y--',
-                    epsiod_reward_list_DCQN, 'co-',
-                    epsiod_reward_list_DRQN, 'y<-',
-                    epsiod_reward_list_DQN, 'ms-',
-                    # epsiod_reward_list_random, 'r--'
+                    episod_reward_list_DCQN, 'co-',
+                    episod_reward_list_DRQN, 'y<-',
+                    episod_reward_list_DQN, 'ms-',
+                    # episod_reward_list_random, 'r--'
         )
-        plt.xlabel("(epsiods)")
+        plt.xlabel("(episods)")
         plt.ylabel("success_number")
-        plt.title("success_epsiod")
+        plt.title("success_episod")
         plt.legend(['DCQN','DRQN','DQN'])
 
         plt.figure()
@@ -628,11 +633,11 @@ if __name__ == "__main__":
             do_num_DCQN, 'co-',
             do_num_DRQN, 'y<-',
             do_num_DQN, 'ms-',
-            # epsiod_reward_list_random, 'r--'
+            # do_num_Random, 'r+-'
         )
-        plt.xlabel("(epsiods)")
+        plt.xlabel("(episods)")
         plt.ylabel("do_number")
-        plt.title("do_num_epsiod")
+        plt.title("do_num_episod")
         plt.legend(['DCQN', 'DRQN', 'DQN'])
 
         # plt.figure()
