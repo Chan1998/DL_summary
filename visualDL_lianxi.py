@@ -16,7 +16,7 @@ def random_crop(img):
     return np.asarray(r)
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # 初始化一个记录器
     # with LogWriter(logdir="./log/image_test/train") as writer:
     #     for step in range(6):
@@ -60,16 +60,16 @@ if __name__ == '__main__':
     # # print(np.array(img)[100][100])
     # img.show()
 
-    dsa = ENV.DSA()
-    state = dsa.reset()
-    pyplot.imshow(state)
-    pyplot.show()
-    state = Image.fromarray(state.astype(np.uint8) * 255)
-
-
+    # dsa = ENV.DSA()
+    # state = dsa.reset()
+    # pyplot.imshow(state)
+    # pyplot.show()
+    # state = Image.fromarray(state.astype(np.uint8) * 255)
     #
-    print(np.array(state))
-    state.show()
+    #
+    # #
+    # print(np.array(state))
+    # state.show()
 
 
 

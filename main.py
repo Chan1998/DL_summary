@@ -27,14 +27,15 @@ import DSA_env as ENV
 # ENV ='KellyCoinflip-v0' #状态比较复杂
 
 MEMORY_SIZE = 2000
-EPISODES = 40
-MAX_STEP = 500  # 注意小于state总时隙数
+EPISODES = 5
+MAX_STEP = 200  # 注意小于state总时隙数
 BATCH_SIZE = 32
 UPDATE_PERIOD = 200  # update target network parameters
 EXPLOR_PERIOD = (0.7 * (EPISODES * MAX_STEP) // 40)
 # print(EXPLOR_PERIOD)
 SHOW_PERIOD = 400
 # layers_list = [200,64]
+
 
 
 def random_chose(env):
@@ -82,7 +83,7 @@ def Train_DQN(env, agent):
     # 开始训练
     with LogWriter(logdir="./log/train/DQN") as writer:
         for episode in tqdm(range(EPISODES)):
-            state = env.reset()
+            state = env.reset(random_start=random_start_list[episode])
             state = state.reshape(env.channel_num * env.time_step)
             reward_all = 0
             do_num = 0
@@ -95,7 +96,7 @@ def Train_DQN(env, agent):
                 action = agent.chose_action(state)
                 if action:
                     do_num += 1
-                next_state, reward ,done = env.step(action, step)
+                next_state, reward ,done = env.step(action, step, random_start=random_start_list[episode])
                 next_state = next_state.reshape(env.channel_num * env.time_step)
 
                 reward_all += reward
@@ -131,18 +132,12 @@ def Train_DQN(env, agent):
                     agent.decay_epsilon()
                     # writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
 
-                # if done:
-                #     if episode % 10 == 1:
-                #         print("episode = {}  step = {} [reward_all = {}]".format(episode, step, reward_all))
-                #     reward_list.append(step)
-                #     break
-
                 # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
                 #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
 
                 state = next_state
                 # step_iter += 1
-            # writer.add_histogram(tag='reward/reward_all', values=reward_list, step=episode, buckets=10)
+
             writer.add_histogram(tag='action/action_list', values=action_list, step=episode, buckets=env.action_space)
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
@@ -168,7 +163,7 @@ def Train_DRQN(env, agent):
     # 开始训练
     with LogWriter(logdir="./log/train/DRQN") as writer:
         for episode in tqdm(range(EPISODES)):
-            state = env.reset()
+            state = env.reset(random_start=random_start_list[episode])
             state = state.reshape(env.channel_num * env.time_step)
             reward_all = 0
             do_num = 0
@@ -181,7 +176,7 @@ def Train_DRQN(env, agent):
                 action = agent.chose_action(state)
                 if action:
                     do_num += 1
-                next_state, reward, done = env.step(action, step)
+                next_state, reward, done = env.step(action, step, random_start=random_start_list[episode])
                 next_state = next_state.reshape(env.channel_num * env.time_step)
 
                 reward_all += reward
@@ -215,13 +210,7 @@ def Train_DRQN(env, agent):
                     agent.decay_epsilon()
                     # writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
 
-                # if done:
-                #     if episode % 10 == 1:
-                #         print("episode = {}  step = {} [reward_all = {}]".format(episode, step, reward_all))
-                #     reward_list.append(step)
-                #     break
-
-                # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
+                # if update_iter % SHOW_PERIOD == 1:
                 #     print(
                 #         "epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}]
                 #         [success_rate = {}]".format(
@@ -230,7 +219,6 @@ def Train_DRQN(env, agent):
                 state = next_state
                 # step_iter += 1
 
-            # writer.add_histogram(tag='reward/reward_all', values=reward_list, step=episode, buckets=10)
             writer.add_histogram(tag='action/action_list', values=action_list, step=episode, buckets=env.action_space)
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
@@ -261,7 +249,7 @@ def Train_DCQN(env, agent):
     # 开始训练
     with LogWriter(logdir="./log/train/DCQN") as writer:
         for episode in tqdm(range(EPISODES)):
-            state = env.reset()
+            state = env.reset(random_start=random_start_list[episode])
             reward_all = 0
             do_num = 0
             action_list = []
@@ -273,7 +261,7 @@ def Train_DCQN(env, agent):
                 action = agent.chose_action(state)
                 if action:
                     do_num += 1
-                next_state, reward, done = env.step(action, step)
+                next_state, reward, done = env.step(action, step, random_start=random_start_list[episode])
                 reward_all += reward
                 action_list.append(action)
                 if episode == (EPISODES-1):
@@ -306,19 +294,12 @@ def Train_DCQN(env, agent):
                     agent.decay_epsilon()
                     # writer.add_scalar(tag="epsilon_probability", step=update_iter, value=agent.epsilon)
 
-                # if done:
-                #     if episode % 10 == 1:
-                #         print("episode = {}  step = {} [reward_all = {}]".format(episode, step, reward_all))
-                #     reward_list.append(step)
-                #     break
-
-                # if update_iter % SHOW_PERIOD == 1:  # 更新target网络
+                # if update_iter % SHOW_PERIOD == 1:
                 #     print("epsiods = {}, step = {} loss = {} action = {} result = {} [reward_all = {}] [success_rate = {}]".format(episode, step, loss, action, reward, reward_all, float(reward_all)/float(step + 1)))
 
                 state = next_state
                 # step_iter += 1
 
-            # writer.add_histogram(tag='reward/reward_all', values=reward_list, step=episode, buckets=10)
             writer.add_histogram(tag='action/action_list', values=action_list, step=episode, buckets=env.action_space)
             reward_list_epsiod.append(reward_all)
             writer.add_scalar(tag="reward/episode", step=episode, value=reward_all)
@@ -575,6 +556,10 @@ if __name__ == "__main__":
 
     # print(env.action_space)
     # print(env.observation_space)
+
+    random_start_list = np.random.randint(0,10000-MAX_STEP,EPISODES)
+    # print(random_start_list)
+    # print(np.shape(random_start_list))
 
     env = ENV.DSA()
 

@@ -12,17 +12,17 @@ import matplotlib.pyplot as plt
 # 只有一个信道，间歇占用[001001001001]
 
 # 读取.文件
-# data_in = pd.read_csv("./channel_data/correlated8.csv")
-data_in = pd.read_csv("./channel_data/perfectly_correlated.csv")
+data_in = pd.read_csv("./channel_data/correlated16.csv")
+# data_in = pd.read_csv("./channel_data/perfectly_correlated.csv")
 # data_in = data_in.drop("index",axis=1)
 # print(np.shape(data_in))
-data_in = data_in[0:520]
+# data_in = data_in[0:500]
 
 class DSA():
 
     def __init__(self):
         self.channel_num = np.shape(data_in)[1]   # 可用信道数
-        print(self.channel_num)
+        # print(self.channel_num)
         self.time_step = 16   # 输入状态历史时间步数
 
         self.action_space = self.channel_num + 1  # (0表示不接入信道，其余表示接入对应信道)
@@ -31,12 +31,12 @@ class DSA():
 
         self.state = collections.deque(maxlen=self.channel_num)  # (channel_num, time_steps)
 
-    def reset(self):
+    def reset(self, random_start=0):
         # 情景一：假设信道一，二，三均周期占用，周期不同
         for i in range(self.channel_num):
             tmp = collections.deque(maxlen=self.time_step)
             for j in range(self.time_step):
-                obs = data_in["channel_"+str(i+1)][j]
+                obs = data_in["channel_"+str(i+1)][j+random_start]
                 tmp.append(obs)
             self.state.append(tmp)
 
@@ -46,11 +46,11 @@ class DSA():
 
         # 情景三：混合占用模式
 
-    def step(self, action:int, steps:int):  # 在steps下实行的动作，及steps值
+    def step(self, action:int, steps:int, random_start=0):  # 在steps下实行的动作，及steps值
 
         # 单智能体情况下：
         for i in range(self.channel_num):
-            self.state[i].append(data_in["channel_"+str(i+1)][steps + self.time_step])
+            self.state[i].append(data_in["channel_"+str(i+1)][steps + self.time_step + random_start])
 
         if action == 0:  # 次级用户不进行信息传输
             reward = 0
